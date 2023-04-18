@@ -1,14 +1,37 @@
-name: Example Workflow
+name: FTP Deploy
+
 on:
   push:
     branches:
       - main
+
 jobs:
-  example_job:
+  deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-      - name: Run Script
-        run: |
-          echo "Hello, World!"
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '7.4'
+
+    - name: Install dependencies
+      run: composer install
+
+    - name: Build and test code
+      run: |
+        phpunit
+        # Add any other tests or build steps here
+
+    - name: Deploy to FTP server
+      uses: SamKirkland/FTP-Deploy-Action@4.1.0
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: .
+        server-dir: /ftp
+        args: --exclude="*.phpunit.xml" --exclude=".git*" --exclude="vendor"
